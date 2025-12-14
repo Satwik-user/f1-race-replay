@@ -50,6 +50,16 @@ class WeatherComponent(BaseComponent):
         self.height = height
         self.top_offset = top_offset
         self.info = None
+        self._weather_icon_textures = {}
+        # Load weather icons from images/weather folder (all files)
+        weather_folder = os.path.join("images", "weather")
+        if os.path.exists(weather_folder):
+            for filename in os.listdir(weather_folder):
+                if filename.lower().endswith(('.png', '.jpg', '.jpeg')):
+                    texture_name = os.path.splitext(filename)[0]
+                    texture_path = os.path.join(weather_folder, filename)
+                    self._weather_icon_textures[texture_name] = arcade.load_texture(texture_path)
+
     def set_info(self, info: Optional[dict]):
         self.info = info
     def draw(self, window):
@@ -60,16 +70,35 @@ class WeatherComponent(BaseComponent):
         def _fmt(val, suffix="", precision=1):
             return f"{val:.{precision}f}{suffix}" if val is not None else "N/A"
         info = self.info or {}
+        # Map each weather line to its corresponding icon
         weather_lines = [
-            f"🌡️ Track: {_fmt(info.get('track_temp'), '°C')}",
-            f"🌡️ Air: {_fmt(info.get('air_temp'), '°C')}",
-            f"💧 Humidity: {_fmt(info.get('humidity'), '%', precision=0)}",
-            f" 🌬️ Wind: {_fmt(info.get('wind_speed'), ' km/h')} {_format_wind_direction(info.get('wind_direction'))}",
-            f"🌧️ Rain: {info.get('rain_state','N/A')}",
+            ("Track", f"{_fmt(info.get('track_temp'), '°C')}", "thermometer"),
+            ("Air", f"{_fmt(info.get('air_temp'), '°C')}", "thermometer"),
+            ("Humidity", f"{_fmt(info.get('humidity'), '%', precision=0)}", "drop"),
+            ("Wind", f"{_fmt(info.get('wind_speed'), ' km/h')} {_format_wind_direction(info.get('wind_direction'))}", "wind"),
+            ("Rain", f"{info.get('rain_state','N/A')}", "rain"),
         ]
+        
         start_y = panel_top - 36
-        for idx, line in enumerate(weather_lines):
-            arcade.Text(line, self.left + 12, start_y - idx * 22, arcade.color.LIGHT_GRAY, 14, anchor_y="top").draw()
+        for idx, (label, value, icon_key) in enumerate(weather_lines):
+            line_y = start_y - idx * 22
+            # Draw weather icon
+            weather_texture = self._weather_icon_textures.get(icon_key)
+            if weather_texture:
+                weather_icon_x = self.left + 24
+                weather_icon_y = line_y - 15
+                icon_size = 16
+                rect = arcade.XYWH(weather_icon_x, weather_icon_y, icon_size, icon_size)
+                arcade.draw_texture_rect(
+                    rect=rect,
+                    texture=weather_texture,
+                    angle=0,
+                    alpha=255
+                )
+            
+            # Draw text
+            line_text = f"{label}: {value}"
+            arcade.Text(line_text, self.left + 38, line_y, arcade.color.LIGHT_GRAY, 14, anchor_y="top").draw()
 
 class LeaderboardComponent(BaseComponent):
     def __init__(self, x: int, right_margin: int = 260, width: int = 240):
