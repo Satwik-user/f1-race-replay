@@ -1189,18 +1189,18 @@ class QualifyingReplay(arcade.Window):
                     
                     # Check if this lap matches driver's personal best (green)
                     if abs(sector_time - driver_best) < 0.001:
-                        return arcade.color.GREEN
+                        return arcade.color.LIME_GREEN
                     # Check if slower than personal best (yellow)
                     elif sector_time > driver_best:
-                        return arcade.color.YELLOW
+                        return (220, 180, 0)
                     # Faster than recorded best (shouldn't happen, but show green)
                     else:
-                        return arcade.color.GREEN
+                        return arcade.color.LIME_GREEN
                 except (ValueError, TypeError):
                     pass
         
         # Default: personal best (green) if no comparison available
-        return arcade.color.GREEN
+        return arcade.color.LIME_GREEN
 
 def run_qualifying_replay(session, data, title="Qualifying Results"):
     window = QualifyingReplay(session=session, data=data, title=title)
